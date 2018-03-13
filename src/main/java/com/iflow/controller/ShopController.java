@@ -2,6 +2,9 @@ package com.iflow.controller;
 
 import java.util.List;
 
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,11 +18,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+
 import com.iflow.model.Items;
+import com.iflow.model.Mail;
 import com.iflow.service.ItemService;
+
+
+
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -28,6 +41,9 @@ import com.iflow.service.ItemService;
 @RequestMapping("user")
 public class ShopController {
 	
+	@Autowired
+    private JavaMailSender sender;
+
 	@Autowired
 	private ItemService itemservice;
 	
@@ -94,5 +110,44 @@ public class ShopController {
 		List<Items> list = itemservice.getItemByBucket();
 		return new ResponseEntity<List<Items>>(list,HttpStatus.OK);
 	}
+	
+	
+	
+	
+	@PostMapping("sendmail")    
+	public ResponseEntity<String> sendMail(@RequestBody Mail mail ){
+        try {
+        	List<Items> list = itemservice.getAllItems();
+        	String mes = " Name | Store | Qty | In Bucket | Expected Price | Purchase Price  \n" ;
+        	
+        	for(int i=0; i < list.size(); i++)
+        	{
+        		mes += list.get(i).getName() +" | "+ list.get(i).getStore() + " | " + list.get(i).getQty() + " | " + list.get(i).getInbucket() + " | " + list.get(i).getEprice() + " | " + list.get(i).getSprice() + " \n "; 
+        	}
+        	
+        	sendEmail(mail.getReceiver(),mail.getSubject(), mes);
+        	
+        	return new ResponseEntity<String>(" { \"msg\" : \"Successfully Send\"}",HttpStatus.OK);
+        }catch(Exception ex) {
+        	return new ResponseEntity<String>(" { \"msg\" : \"Error in SendMail\"}",HttpStatus.CONFLICT);
+        }
+    }
+	
+	
+		public void sendEmail(String rec, String sub, String msg) throws Exception{
+				
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message);
+        
+			
+			
+			helper.setTo(rec);
+			helper.setSubject(sub);
+			helper.setText(msg);
+			
+        
+			sender.send(message);
+    }
+	
 	
 }
