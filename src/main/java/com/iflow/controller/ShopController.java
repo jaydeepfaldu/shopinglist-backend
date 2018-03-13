@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.iflow.model.Items;
@@ -23,6 +24,7 @@ import com.iflow.service.ItemService;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @Controller
+@RestController
 @RequestMapping("user")
 public class ShopController {
 	
@@ -44,14 +46,18 @@ public class ShopController {
 	}
 	
 	@PostMapping("item")
-	public ResponseEntity<Void> addItem(@RequestBody Items item, UriComponentsBuilder builder) {
+	public ResponseEntity<List<Items>> addItem(@RequestBody Items item, UriComponentsBuilder builder) {
         boolean flag = itemservice.addItem(item);
+        List<Items> list = itemservice.getAllItems();
+		
         if (flag == false) {
-        	return new ResponseEntity<Void>(HttpStatus.CONFLICT);
+        	return new ResponseEntity<List<Items>>(list, HttpStatus.CONFLICT);
+        	//return new ResponseEntity<Void>(HttpStatus.CONFLICT);
         }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(builder.path("/item/{id}").buildAndExpand(item.getId()).toUri());
-        return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+       // HttpHeaders headers = new HttpHeaders();
+      //  headers.setLocation(builder.path("/item/{id}").buildAndExpand(item.getId()).toUri());
+        return new ResponseEntity<List<Items>>(list, HttpStatus.CREATED);
+       // return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
 	}
 	
 	
@@ -75,15 +81,18 @@ public class ShopController {
 	}	
 	
 	@PutMapping("itembucket/{id}")
-	public ResponseEntity<Void> updateInbucket(@PathVariable("id") Integer id, @RequestBody Items item) {
+	public ResponseEntity<List<Items>> updateInbucket(@PathVariable("id") Integer id, @RequestBody Items item) {
 		itemservice.updateInbucket(id, item.getInbucket());
-		return new ResponseEntity<Void>(HttpStatus.OK);
+		List<Items> list = itemservice.getAllItems();
+		//return new ResponseEntity<List<Items>>(list, HttpStatus.OK);
+		return new ResponseEntity<List<Items>>(list,HttpStatus.OK);
 	}
 	
 	@PutMapping("itemsprice/{id}")
-	public ResponseEntity<Void> updateSprice(@PathVariable("id") Integer id, @RequestBody Items item) {
+	public ResponseEntity<List<Items>> updateSprice(@PathVariable("id") Integer id, @RequestBody Items item) {
 		itemservice.updateSprice(id, item.getSprice());
-		return new ResponseEntity<Void>(HttpStatus.OK);
+		List<Items> list = itemservice.getItemByBucket();
+		return new ResponseEntity<List<Items>>(list,HttpStatus.OK);
 	}
 	
 }
